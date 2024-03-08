@@ -2,7 +2,7 @@
 ### Check branches for the AssetLib source
 Auto-minimize AlwaysOnTop and ExclusiveFullscreen windows when crashing or using a breakpoint. Will reopen upon continuing from breakpoint.
 
-This is useful, because those two window modes will lock up for a time, covering the Godot editor. They are otherwise annoying to make disapear.
+This is useful, because those two window modes will lock up for a time, covering and interfering with the Godot editor. They are otherwise annoying to make disapear.
 
 This plugin comes with modes you can edit from the autoload, or the 'wbg_autoload.gd' file:
 - STANDARD, Will always minimize AlwaysOnTop or ExclusiveFullscreen windows.
