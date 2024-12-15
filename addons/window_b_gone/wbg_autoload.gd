@@ -22,6 +22,8 @@ func set_mode(mode:PLUGIN_MODE) -> void:
 @export var ignore_exclusive_fullscreen := false
 
 var previous_window_mode :int
+var is_queueing_restore := false
+var is_restoring_window := false
 
 
 func _ready() -> void:
@@ -54,11 +56,39 @@ func _on_plugin_message(message:String, data:Array) -> bool:
 		PLUGIN_MODE.FORCE_MINIMIZE: pass
 		PLUGIN_MODE.DISABLED: return true
 	
+	var already_queued := is_queueing_restore
+	is_queueing_restore = true
+	
 	match data[0]:
 		"breaked":
-			previous_window_mode = window.get_mode()
-			window.set_mode(Window.MODE_MINIMIZED)
+			is_restoring_window = false
+			if !already_queued:
+				previous_window_mode = window.get_mode()
+				window.set_mode(Window.MODE_MINIMIZED)
 		"continued":
-			window.set_mode(previous_window_mode)
-			previous_window_mode = -1
+			is_restoring_window = true
+	if !already_queued:
+		_try_restore_window()
+	
 	return true
+
+
+func _try_restore_window() -> void:
+	# Restore here so it doesn't spam un and re minimizing every time you
+	# step through while debugging. (Wait 1 frame to restore.)
+	await Engine.get_main_loop().process_frame
+	var window := get_window()
+	
+	if plugin_mode == PLUGIN_MODE.DISABLED:
+		is_queueing_restore = false
+		return
+	
+	if is_restoring_window: 
+		window.set_mode(previous_window_mode)
+		previous_window_mode = -1
+	else:
+		# Keep calling as nescessary, in unlikely event of manually stepping over 2 or more process frames.
+		_try_restore_window()
+		return
+	
+	is_queueing_restore = false
